@@ -1,0 +1,120 @@
+#include <util/atomic.h> // For the ATOMIC_BLOCK macro
+
+// Define pin assignments
+#define ENCA 2 // Encoder Channel A (Yellow)
+#define ENCB 3 // Encoder Channel B (White)
+#define PWM 5  // Motor PWM Control
+#define IN2 6  // Motor Direction Control (IN2)
+#define IN1 7  // Motor Direction Control (IN1)
+#define R_ENABLE 8  // Right Motor Enable
+#define L_ENABLE 9  // Left Motor Enable
+
+// Global variables
+volatile int posi = 0;    // Motor position (volatile for ISR safety)
+long prevT = 0;           // Previous time for PID control
+float eprev = 0;          // Previous error for PID control
+float eintegral = 0;      // Integral of error for PID control
+
+// PID constants (global scope)
+float kp = 1;
+float kd = 0.025;
+float ki = 0.0;
+
+void setup() {
+  // Initialize serial communication
+  Serial.begin(9600);
+
+  // Set pin modes
+  pinMode(ENCA, INPUT);
+  pinMode(ENCB, INPUT);
+  pinMode(PWM, OUTPUT);
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+  pinMode(R_ENABLE, OUTPUT);
+  pinMode(L_ENABLE, OUTPUT);
+
+  // Enable motor drivers
+  digitalWrite(R_ENABLE, HIGH);
+  digitalWrite(L_ENABLE, HIGH);
+
+  // Attach interrupt for encoder channel A
+  attachInterrupt(digitalPinToInterrupt(ENCA), readEncoder, RISING);
+
+  // Print initial message to serial monitor
+  Serial.println("target pos");
+}
+
+void loop() {
+  // Set target position (for demonstration, sinusoidal function)
+  int target = -600;
+Message (Enter to send message to 'Arduino Mega or Mega 2560' on 'COM3')
+New Line
+9600 baud
+
+  // Calculate time difference
+  long currT = micros();
+  float deltaT = ((float)(currT - prevT)) / 1000000.0;
+  prevT = currT;
+
+  // Read motor position within an atomic block
+  int pos = 0;
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+    pos = posi;
+  }
+
+  // Calculate error
+  int e = target - pos;
+
+  // Calculate derivative
+  float dedt = (e - eprev) / deltaT;
+
+  // Calculate integral
+  eintegral += e * deltaT;
+
+  // Calculate control signal
+  float u = (kp * e) + (kd * dedt) + (ki * eintegral);
+
+  // Convert control signal to motor power
+  float pwr = abs(u);
+  if (pwr > 255) {
+    pwr = 255; // Limit maximum power
+  }
+
+  // Determine motor direction
+  int dir = (u > 0) ? 1 : -1;
+
+  // Apply control signal to the motor
+  setMotor(dir, pwr);
+
+  // Store previous error
+  eprev = e;
+
+  // Print target and actual positions to serial monitor
+  Serial.print("Target: ");
+  Serial.print(target);
+  Serial.print("\tPosition: ");
+  Serial.println(pos);
+  delay(100); // Small delay for stability
+}
+
+// Function to set motor direction and PWM
+void setMotor(int dir, int pwmVal) {
+  analogWrite(PWM, pwmVal); // Set PWM value for motor speed control
+  if (dir == 1) {
+    digitalWrite(IN1, HIGH); // Set motor direction forward
+    digitalWrite(IN2, LOW);
+  } else {
+    digitalWrite(IN1, LOW); // Set motor direction reverse
+    digitalWrite(IN2, HIGH);
+  }
+}
+
+// Interrupt service routine for reading encoder
+void readEncoder() {
+  int b = digitalRead(ENCB); // Read state of encoder channel B
+  if (b > 0) {
+    posi++; // Increment position if channel B is high
+  } else {
+    posi--; // Decrement position if channel B is low
+  }
+}

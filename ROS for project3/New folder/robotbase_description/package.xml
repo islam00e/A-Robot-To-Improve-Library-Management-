@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<robot name="robot_description">
+
+  <!-- Your existing URDF definitions -->
+
+  <!-- ++++++++++++++++++ Gazebo Plugin Configuration ++++++++++++++++++ -->
+
+  <gazebo>
+    <plugin name="differential_drive_controller" filename="libgazebo_ros_diff_drive.so">
+      <!-- Disable legacy mode for compatibility with older versions -->      
+      <legacyMode>false</legacyMode>
+      <!-- Ensure the plugin is always active -->
+      <alwaysOn>true</alwaysOn>
+      <!-- Plugin update rate in Hz -->
+      <updateRate>20</updateRate>
+      
+      <!-- Name of left joint -->
+      <leftJoint>link_left</leftJoint>
+      
+      <!-- Name of right joint -->
+      <rightJoint>link_right</rightJoint>
+      
+      <!-- The distance from the center of one wheel to the other, in meters -->
+      <wheelSeparation>0.21</wheelSeparation>
+      
+      <!-- Diameter of the wheels, in meters -->
+      <wheelDiameter>0.1</wheelDiameter>
+      
+      <!-- Wheel acceleration, in rad/s^2 -->
+      <wheelAcceleration>0.2</wheelAcceleration>
+      
+      <!-- Maximum torque which the wheels can produce, in Nm -->
+      <wheelTorque>0.7</wheelTorque>
+      
+      <!-- Topic to receive geometry_msgs/Twist message commands -->
+      <commandTopic>cmd_vel</commandTopic>
+      
+      <!-- Topic to publish nav_msgs/Odometry messages -->
+      <odometryTopic>odom</odometryTopic>
+      
+      <!-- Odometry frame -->
+      <odometryFrame>odom</odometryFrame>
+      
+      <!-- Robot frame to calculate odometry from -->
+      <robotBaseFrame>base_link</robotBaseFrame>
+
+    </plugin>
+  </gazebo>
+
+<!-- +++++++++++++ Chassis Orange color ++++++++++++++++++ -->
+
+  <!-- Set the chassis color to orange -->
+  <gazebo reference="base_link">
+    <material>Gazebo/Orange</material>
+  </gazebo>
+
+<!-- ++++++++++++++++ Left wheel Blue Color ++++++++++++++++++ -->
+
+  <!-- Set the left wheel color to blue -->
+  <gazebo reference="left_link">
+    <material>Gazebo/Blue</material>
+  </gazebo>
+
+
+  <!-- +++++++++++++++ Right wheel Blue Color ++++++++++++++++++ -->
+
+  <!-- Set the right wheel color to blue -->
+  <gazebo reference="right_link">
+    <material>Gazebo/Blue</material>
+  </gazebo>
+
+
+
+<!-- ++++++++++++++++++ Kinect Plugin ++++++++++++++++++ -->
+
+  <!-- Gazebo plugin configuration for Kinect sensor -->
+<gazebo reference="link_kinect">
+    <!-- Define a depth sensor named "camera" -->
+    <sensor type="depth" name="camera">
+        <!-- Ensure the sensor is always active -->
+        <always_on>1</always_on>
+        <!-- Visualize the sensor in Gazebo -->
+        <visualize>true</visualize>
+        <camera>
+            <!-- Set the horizontal field of view for the camera -->
+            <horizontal_fov>1.047</horizontal_fov>
+            <!-- Define image resolution -->
+            <image>
+                <width>640</width>
+                <height>480</height>
+                <format>R8G8B8</format>
+            </image>
+            <!-- Define clipping settings for the camera -->
+            <clip>
+                <near>0.1</near>
+                <far>100</far>
+            </clip>
+        </camera>
+        <!-- Define the plugin responsible for controlling the Kinect sensor -->
+        <plugin name="camera_controller" filename="libgazebo_ros_openni_kinect.so">
+            <!-- Ensure the plugin is always active -->
+            <alwaysOn>true</alwaysOn>
+            <!-- Set the update rate of the plugin in Hertz -->
+            <updateRate>10.0</updateRate>
+            <!-- Specify the name of the camera -->
+            <cameraName>camera</cameraName>
+            <!-- Specify the frame name for the camera -->
+            <frameName>link_kinect</frameName>
+            <!-- Specify the topic name for RGB image -->
+            <imageTopicName>rgb/image_raw</imageTopicName>
+            <!-- Specify the topic name for depth image -->
+            <depthImageTopicName>depth/image_raw</depthImageTopicName>
+            <!-- Specify the topic name for point cloud -->
+            <pointCloudTopicName>depth/points</pointCloudTopicName>
+            <!-- Specify the topic name for camera info -->
+            <cameraInfoTopicName>rgb/camera_info</cameraInfoTopicName>
+            <!-- Specify the topic name for depth camera info -->
+            <depthImageCameraInfoTopicName>depth/camera_info</depthImageCameraInfoTopicName>
+            <!-- Set the depth cutoff -->
+            <pointCloudCutoff>0.4</pointCloudCutoff>
+            <!-- Set the baseline hack -->
+            <hackBaseline>0.07</hackBaseline>
+            <!-- Set the distortion coefficients -->
+            <distortionK1>0.0</distortionK1>
+            <distortionK2>0.0</distortionK2>
+            <distortionK3>0.0</distortionK3>
+            <distortionT1>0.0</distortionT1>
+            <distortionT2>0.0</distortionT2>
+            <!-- Set the camera calibration parameters -->
+            <CxPrime>0.0</CxPrime>
+            <Cx>0.0</Cx>
+            <Cy>0.0</Cy>
+            <focalLength>0.0</focalLength>
+        </plugin>
+    </sensor>
+</gazebo>
+
+  
+
+
+</robot>
